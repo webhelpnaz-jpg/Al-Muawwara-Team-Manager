@@ -29,8 +29,16 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
 
   if (!team) return <div>Team not found</div>;
 
-  const isCoach = user?.role === UserRole.COACH && user.assignedTeamId === teamId;
-  const isManagement = user?.role === UserRole.PRINCIPAL || user?.role === UserRole.MASTER_IN_CHARGE || user?.role === UserRole.ADMIN;
+  // Permission Logic
+  // Management can do everything.
+  // Coaches can only mark attendance if assigned to THIS team.
+  const isManagement = user?.role === UserRole.PRINCIPAL || 
+                       user?.role === UserRole.MASTER_IN_CHARGE || 
+                       user?.role === UserRole.ADMIN;
+                       
+  const isAssignedCoach = user?.role === UserRole.COACH && user?.assignedTeamId === teamId;
+  
+  const canMarkAttendance = isManagement || isAssignedCoach;
   const canEditDetails = user?.role === UserRole.ADMIN || user?.role === UserRole.MASTER_IN_CHARGE;
 
   const handleOpenEditTeam = () => {
@@ -263,7 +271,7 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
           </div>
 
           <div className="flex flex-col space-y-2">
-            {(isCoach || isManagement) && (
+            {canMarkAttendance && (
                 <button 
                   onClick={() => setShowAttendance(true)}
                   className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition shadow-sm"

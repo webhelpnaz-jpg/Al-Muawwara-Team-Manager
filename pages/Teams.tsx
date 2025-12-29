@@ -10,10 +10,8 @@ const Teams: React.FC = () => {
   const { user } = useAuth();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
-  // If coach, only show their team or auto-select it
-  const visibleTeams = user?.role === 'Coach' 
-    ? teams.filter(t => t.id === user.assignedTeamId)
-    : teams;
+  // Show all teams to all authorized users (Coaches, Admin, Principal, MIC)
+  const visibleTeams = teams;
 
   const handleSelectTeam = (id: string) => {
     setSelectedTeamId(id);

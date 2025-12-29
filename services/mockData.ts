@@ -102,6 +102,26 @@ export const MOCK_PLAYERS = generateMockPlayers();
 // Assign a parent to the first player of the first team
 const samplePlayerId = MOCK_PLAYERS[0].id; 
 
+const generateCoachUsers = (): User[] => {
+  return MOCK_TEAMS.map((team, index) => {
+    // Determine the main coach name
+    const headCoachName = team.coaches.find(c => c.role === 'Head Coach')?.name || 'Coach';
+    // Remove "Mr.", "Ms.", "Master" for cleaner email generation if needed, or just use sport name
+    // Requirement: "Password as the sport name"
+    const sportName = team.name;
+    
+    return {
+      id: `u-coach-${team.id}`,
+      name: `${headCoachName} (${sportName})`,
+      email: `${sportName.toLowerCase().replace(/\s/g, '')}@school.com`,
+      password: sportName, // Requirement: Password is the Sport Name
+      role: UserRole.COACH,
+      assignedTeamId: team.id,
+      avatarUrl: `https://picsum.photos/100/100?random=${20 + index}`
+    };
+  });
+};
+
 export const MOCK_USERS: User[] = [
   { 
     id: 'u1', 
@@ -120,22 +140,12 @@ export const MOCK_USERS: User[] = [
     avatarUrl: 'https://picsum.photos/100/100?random=2' 
   },
   { 
-    id: 'u3', 
-    name: 'Coach Silva (Rugby)', 
-    email: 'rugby@school.com', 
-    password: '123', 
-    role: UserRole.COACH, 
-    assignedTeamId: 't1', 
-    avatarUrl: 'https://picsum.photos/100/100?random=3' 
-  },
-  { 
-    id: 'u4', 
-    name: 'Coach Perera (Cricket)', 
-    email: 'cricket@school.com', 
-    password: '123', 
-    role: UserRole.COACH, 
-    assignedTeamId: 't2', 
-    avatarUrl: 'https://picsum.photos/100/100?random=4' 
+    id: 'u6', 
+    name: 'System Admin', 
+    email: 'admin@school.com', 
+    password: 'Rugby@al', 
+    role: UserRole.ADMIN, 
+    avatarUrl: 'https://picsum.photos/100/100?random=5' 
   },
   { 
     id: 'u5', 
@@ -146,14 +156,7 @@ export const MOCK_USERS: User[] = [
     linkedPlayerId: samplePlayerId, 
     avatarUrl: 'https://picsum.photos/100/100?random=6' 
   },
-  { 
-    id: 'u6', 
-    name: 'System Admin', 
-    email: 'admin@school.com', 
-    password: 'admin', 
-    role: UserRole.ADMIN, 
-    avatarUrl: 'https://picsum.photos/100/100?random=5' 
-  },
+  ...generateCoachUsers()
 ];
 
 export const MOCK_SCHEDULE: ScheduleEvent[] = [

@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Teams from './pages/Teams';
 import GlobalSchedule from './pages/GlobalSchedule';
+import AdminSettings from './pages/AdminSettings';
 
 // Protected Route Wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,6 +40,12 @@ const AppRoutes = () => {
       <Route path="/schedule" element={
         <ProtectedRoute>
           <GlobalSchedule />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <AdminSettings />
         </ProtectedRoute>
       } />
 

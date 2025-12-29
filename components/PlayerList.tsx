@@ -36,7 +36,11 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
 
   const [formData, setFormData] = useState<Player>(initialFormState);
 
-  const canEdit = user?.role === UserRole.PRINCIPAL || 
+  // Permission Logic:
+  // Admin, Principal, MIC can always edit.
+  // Coaches can only edit if they are assigned to THIS specific team.
+  const canEdit = user?.role === UserRole.ADMIN ||
+                  user?.role === UserRole.PRINCIPAL || 
                   user?.role === UserRole.MASTER_IN_CHARGE || 
                   (user?.role === UserRole.COACH && user.assignedTeamId === teamId);
 

@@ -4,7 +4,7 @@ import { MOCK_USERS } from '../services/mockData';
 
 interface AuthContextType {
   user: User | null;
-  login: (userId: string) => void;
+  login: (email: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -14,11 +14,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = (userId: string) => {
-    const foundUser = MOCK_USERS.find(u => u.id === userId);
+  const login = (email: string, password: string): boolean => {
+    const foundUser = MOCK_USERS.find(u => u.email === email && u.password === password);
     if (foundUser) {
       setUser(foundUser);
+      return true;
     }
+    return false;
   };
 
   const logout = () => {

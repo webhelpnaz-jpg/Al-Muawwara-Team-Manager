@@ -14,19 +14,28 @@ export enum TeamCategory {
 export interface User {
   id: string;
   name: string;
+  email: string;
+  password: string;
   role: UserRole;
   assignedTeamId?: string; // For coaches
   linkedPlayerId?: string; // For parents
   avatarUrl?: string;
 }
 
+export interface CoachInfo {
+  name: string;
+  role: 'Head Coach' | 'Assistant Coach';
+  joinedDate: string;
+}
+
 export interface Team {
   id: string;
   name: string;
   category: TeamCategory;
-  coachName: string;
-  coachJoinedDate?: string; // ISO Date string
-  icon: string;
+  // New: Array of coaches (max 3)
+  coaches: CoachInfo[];
+  icon: string; // Emoji fallback
+  logoUrl?: string; // Custom image
   nextPractice?: string;
 }
 
@@ -36,9 +45,10 @@ export interface Player {
   name: string;
   grade: string;
   position: string;
-  contactParent: string; // Used as primary contact number
+  contactParent: string; 
   
   // New Fields
+  photoUrl?: string;
   dob: string;
   joinedDate: string;
   emergencyContactName: string;

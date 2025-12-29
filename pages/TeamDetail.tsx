@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../types';
-import { ArrowLeft, Calendar, UserCheck, ClipboardList, Settings, Download, Upload, FileSpreadsheet, Save, X } from 'lucide-react';
+import { UserRole, CoachInfo } from '../types';
+import { ArrowLeft, Calendar, UserCheck, ClipboardList, Settings, Download, Upload, Save, X, Plus, Trash2 } from 'lucide-react';
 import PlayerList from '../components/PlayerList';
 import AttendanceTaker from '../components/AttendanceTaker';
 import ScheduleView from '../components/ScheduleView';
@@ -24,20 +24,19 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state for Team Editing
-  const [editCoachName, setEditCoachName] = useState('');
-  const [editCoachDate, setEditCoachDate] = useState('');
+  const [editCoaches, setEditCoaches] = useState<CoachInfo[]>([]);
+  const [editLogoUrl, setEditLogoUrl] = useState('');
 
   if (!team) return <div>Team not found</div>;
 
   const isCoach = user?.role === UserRole.COACH && user.assignedTeamId === teamId;
   const isManagement = user?.role === UserRole.PRINCIPAL || user?.role === UserRole.MASTER_IN_CHARGE || user?.role === UserRole.ADMIN;
-  
-  // Specific permission for editing details (Admin/MIC only as per request)
   const canEditDetails = user?.role === UserRole.ADMIN || user?.role === UserRole.MASTER_IN_CHARGE;
 
   const handleOpenEditTeam = () => {
-    setEditCoachName(team.coachName);
-    setEditCoachDate(team.coachJoinedDate || '');
+    // Clone the coaches array to avoid direct mutation during edit
+    setEditCoaches(team.coaches.map(c => ({...c})) || []);
+    setEditLogoUrl(team.logoUrl || '');
     setShowEditTeamModal(true);
   };
 
@@ -45,14 +44,41 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
     e.preventDefault();
     updateTeam({
       ...team,
-      coachName: editCoachName,
-      coachJoinedDate: editCoachDate
+      coaches: editCoaches,
+      logoUrl: editLogoUrl
     });
     setShowEditTeamModal(false);
   };
 
+  const handleCoachChange = (index: number, field: keyof CoachInfo, value: string) => {
+    const updated = [...editCoaches];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditCoaches(updated);
+  };
+
+  const handleAddCoach = () => {
+    if (editCoaches.length < 3) {
+      setEditCoaches([...editCoaches, { name: '', role: 'Assistant Coach', joinedDate: new Date().toISOString().split('T')[0] }]);
+    }
+  };
+
+  const handleRemoveCoach = (index: number) => {
+    const updated = editCoaches.filter((_, i) => i !== index);
+    setEditCoaches(updated);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditLogoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleExportData = () => {
-    // Generate CSV Content
     const headers = ['Player Name', 'Grade', 'Position', 'Joined Date', 'Parent Contact', 'Attendance Rate %', 'Status'];
     const rows = players.map(p => [
       p.name,
@@ -86,9 +112,8 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real app, parse the file here. For demo:
       alert(`Successfully uploaded: ${file.name}. (Simulation: Data merged)`);
-      event.target.value = ''; // Reset
+      event.target.value = ''; 
     }
   };
 
@@ -102,32 +127,96 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
       {/* Team Editing Modal */}
       {showEditTeamModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-           <div className="bg-white rounded-lg p-6 w-full max-w-md">
+           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
              <div className="flex justify-between items-center mb-4">
                <h3 className="text-xl font-bold">Edit Team Details</h3>
                <button onClick={() => setShowEditTeamModal(false)}><X size={24} className="text-slate-400" /></button>
              </div>
-             <form onSubmit={handleSaveTeam} className="space-y-4">
-                <div>
-                   <label className="block text-sm font-medium text-slate-700">Coach Name</label>
-                   <input 
-                      type="text" 
-                      value={editCoachName}
-                      onChange={(e) => setEditCoachName(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-slate-300 shadow-sm border p-2"
-                      required
-                   />
+             <form onSubmit={handleSaveTeam} className="space-y-6">
+                {/* Logo Uploader */}
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden mb-2 border border-slate-200 relative">
+                     {editLogoUrl ? (
+                       <img src={editLogoUrl} alt="Preview" className="w-full h-full object-cover" />
+                     ) : (
+                       <span className="text-4xl">{team.icon}</span>
+                     )}
+                  </div>
+                  <label className="cursor-pointer text-xs text-emerald-600 font-medium hover:text-emerald-700">
+                    Change Logo
+                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                  </label>
                 </div>
+
+                {/* Coaches Section */}
                 <div>
-                   <label className="block text-sm font-medium text-slate-700">Coach Joined Date</label>
-                   <input 
-                      type="date" 
-                      value={editCoachDate}
-                      onChange={(e) => setEditCoachDate(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-slate-300 shadow-sm border p-2"
-                   />
+                   <div className="flex justify-between items-center mb-2">
+                     <label className="block text-sm font-bold text-slate-700">Coaching Staff (Max 3)</label>
+                     {editCoaches.length < 3 && (
+                       <button 
+                         type="button" 
+                         onClick={handleAddCoach}
+                         className="text-xs flex items-center text-emerald-600 font-medium hover:text-emerald-700"
+                       >
+                         <Plus size={14} className="mr-1" /> Add Coach
+                       </button>
+                     )}
+                   </div>
+                   
+                   <div className="space-y-3">
+                     {editCoaches.map((coach, index) => (
+                       <div key={index} className="bg-slate-50 p-3 rounded border border-slate-200 relative">
+                          <button 
+                             type="button" 
+                             onClick={() => handleRemoveCoach(index)}
+                             className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
+                             title="Remove Coach"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-6">
+                             <div>
+                               <label className="block text-xs font-medium text-slate-500">Name</label>
+                               <input 
+                                  type="text" 
+                                  value={coach.name}
+                                  onChange={(e) => handleCoachChange(index, 'name', e.target.value)}
+                                  className="mt-1 block w-full text-sm rounded-md border-slate-300 border p-1.5"
+                                  placeholder="Coach Name"
+                                  required
+                               />
+                             </div>
+                             <div>
+                               <label className="block text-xs font-medium text-slate-500">Role</label>
+                               <select 
+                                  value={coach.role}
+                                  onChange={(e) => handleCoachChange(index, 'role', e.target.value as any)}
+                                  className="mt-1 block w-full text-sm rounded-md border-slate-300 border p-1.5 bg-white"
+                               >
+                                  <option value="Head Coach">Head Coach</option>
+                                  <option value="Assistant Coach">Assistant Coach</option>
+                               </select>
+                             </div>
+                             <div>
+                               <label className="block text-xs font-medium text-slate-500">Joined Date</label>
+                               <input 
+                                  type="date" 
+                                  value={coach.joinedDate}
+                                  onChange={(e) => handleCoachChange(index, 'joinedDate', e.target.value)}
+                                  className="mt-1 block w-full text-sm rounded-md border-slate-300 border p-1.5"
+                               />
+                             </div>
+                          </div>
+                       </div>
+                     ))}
+                     {editCoaches.length === 0 && (
+                       <div className="text-sm text-slate-500 italic text-center py-2">No coaches assigned.</div>
+                     )}
+                   </div>
                 </div>
-                <div className="flex justify-end pt-4">
+
+                <div className="flex justify-end pt-4 border-t border-slate-100">
                    <button type="submit" className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">
                      <Save size={18} className="mr-2" /> Save Changes
                    </button>
@@ -147,23 +236,37 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
             >
               <ArrowLeft size={20} />
             </button>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-3xl">{team.icon}</span>
-                <h1 className="text-2xl font-bold text-slate-900">{team.name}</h1>
-              </div>
-              <div className="flex flex-col text-sm text-slate-500 mt-1">
-                 <span>Coach: <span className="font-medium text-slate-700">{team.coachName}</span></span>
-                 {team.coachJoinedDate && <span>Joined: {new Date(team.coachJoinedDate).toLocaleDateString()}</span>}
+            <div className="flex items-center space-x-4">
+              {team.logoUrl ? (
+                <img src={team.logoUrl} alt={team.name} className="w-20 h-20 rounded-lg object-cover border border-slate-200" />
+              ) : (
+                <div className="w-20 h-20 rounded-lg bg-slate-100 flex items-center justify-center text-4xl border border-slate-200">
+                  {team.icon}
+                </div>
+              )}
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">{team.name}</h1>
+                <div className="mt-2 space-y-1">
+                  {team.coaches.map((coach, idx) => (
+                    <div key={idx} className="flex items-center text-sm text-slate-600">
+                       <span className={`font-semibold mr-2 ${coach.role === 'Head Coach' ? 'text-emerald-700' : 'text-slate-500'}`}>
+                         {coach.role}:
+                       </span>
+                       <span className="text-slate-800 font-medium">{coach.name}</span>
+                       <span className="text-slate-400 text-xs ml-2"> (Since {new Date(coach.joinedDate).getFullYear()})</span>
+                    </div>
+                  ))}
+                  {team.coaches.length === 0 && <span className="text-slate-400 italic text-sm">No coaches assigned</span>}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex space-x-2">
+          <div className="flex flex-col space-y-2">
             {(isCoach || isManagement) && (
                 <button 
                   onClick={() => setShowAttendance(true)}
-                  className="flex items-center px-4 py-2 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition shadow-sm"
+                  className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition shadow-sm"
                 >
                   <UserCheck size={18} className="mr-2" />
                   Mark Attendance
@@ -177,23 +280,22 @@ const TeamDetail: React.FC<TeamDetailProps> = ({ teamId, onBack }) => {
           <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-3">
              <button 
                onClick={handleOpenEditTeam}
-               className="flex items-center justify-center px-3 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded hover:bg-slate-200 border border-slate-200"
+               className="flex items-center justify-center px-3 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded hover:bg-slate-200 border border-slate-200 transition"
              >
-               <Settings size={16} className="mr-2" /> Edit Coach Details
+               <Settings size={16} className="mr-2" /> Edit Team & Coaches
              </button>
              <button 
                onClick={handleExportData}
-               className="flex items-center justify-center px-3 py-2 bg-emerald-50 text-emerald-700 text-sm font-medium rounded hover:bg-emerald-100 border border-emerald-200"
+               className="flex items-center justify-center px-3 py-2 bg-emerald-50 text-emerald-700 text-sm font-medium rounded hover:bg-emerald-100 border border-emerald-200 transition"
              >
                <Download size={16} className="mr-2" /> Download Excel/CSV
              </button>
              <button 
                onClick={handleImportClick}
-               className="flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded hover:bg-blue-100 border border-blue-200"
+               className="flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded hover:bg-blue-100 border border-blue-200 transition"
              >
                <Upload size={16} className="mr-2" /> Upload Excel Sheet
              </button>
-             {/* Hidden Input for File Upload */}
              <input 
                type="file" 
                ref={fileInputRef} 

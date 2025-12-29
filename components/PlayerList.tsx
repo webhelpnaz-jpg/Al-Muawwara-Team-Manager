@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Player, UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-import { Edit2, Trash2, Phone, Activity, Plus, X } from 'lucide-react';
+import { Edit2, Trash2, Phone, Activity, Plus, X, Camera } from 'lucide-react';
 
 interface PlayerListProps {
   teamId: string;
@@ -30,7 +30,8 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
     performanceNotes: '',
     medicalNotes: '',
     attendanceRate: 100,
-    status: 'Active'
+    status: 'Active',
+    photoUrl: ''
   };
 
   const [formData, setFormData] = useState<Player>(initialFormState);
@@ -61,6 +62,17 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
     setShowModal(false);
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, photoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -81,11 +93,16 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
             <div>
               <div className="flex justify-between items-start">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                    player.status === 'Injured' ? 'bg-red-500' : 'bg-slate-400'
-                  }`}>
-                    {player.name.charAt(0)}
-                  </div>
+                  {player.photoUrl ? (
+                     <img src={player.photoUrl} alt={player.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                  ) : (
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                      player.status === 'Injured' ? 'bg-red-500' : 'bg-slate-400'
+                    }`}>
+                      {player.name.charAt(0)}
+                    </div>
+                  )}
+                  
                   <div>
                     <h4 className="font-medium text-slate-900">{player.name}</h4>
                     <p className="text-xs text-slate-500">{player.position} • Grade {player.grade}</p>
@@ -133,6 +150,24 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
              </div>
              
              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+               
+               {/* Photo Upload */}
+               <div className="flex justify-center mb-6">
+                 <div className="relative group">
+                    <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                       {formData.photoUrl ? (
+                         <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                       ) : (
+                         <Camera size={32} className="text-slate-400" />
+                       )}
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-emerald-600 text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-emerald-700 transition-colors">
+                      <Camera size={14} />
+                      <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+                    </label>
+                 </div>
+               </div>
+
                {/* Personal Info */}
                <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Personal Details</h4>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

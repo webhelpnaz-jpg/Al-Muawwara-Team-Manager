@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
-import { Team, Player, ScheduleEvent, AttendanceRecord } from '../types';
+import { Team, Player, ScheduleEvent, AttendanceRecord, AppSettings } from '../types';
 import { MOCK_TEAMS, MOCK_PLAYERS, MOCK_SCHEDULE, MOCK_ATTENDANCE } from '../services/mockData';
 
 interface DataContextType {
@@ -7,12 +7,14 @@ interface DataContextType {
   players: Player[];
   schedule: ScheduleEvent[];
   attendance: AttendanceRecord[];
+  appSettings: AppSettings;
   addPlayer: (player: Player) => void;
   updatePlayer: (player: Player) => void;
   deletePlayer: (playerId: string) => void;
   updateTeam: (team: Team) => void; 
   markAttendance: (records: AttendanceRecord[]) => void;
   addEvent: (event: ScheduleEvent) => void;
+  updateAppSettings: (settings: AppSettings) => void;
   getPlayersByTeam: (teamId: string) => Player[];
   getEventsByTeam: (teamId: string) => ScheduleEvent[];
 }
@@ -41,11 +43,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return saved ? JSON.parse(saved) : MOCK_ATTENDANCE;
   });
 
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => {
+    const saved = localStorage.getItem('amps_settings');
+    return saved ? JSON.parse(saved) : { 
+      schoolName: 'Al Munawwara Teams', 
+      logoUrl: '' 
+    };
+  });
+
   // Persist data to LocalStorage whenever state changes
   useEffect(() => { localStorage.setItem('amps_teams', JSON.stringify(teams)); }, [teams]);
   useEffect(() => { localStorage.setItem('amps_players', JSON.stringify(players)); }, [players]);
   useEffect(() => { localStorage.setItem('amps_schedule', JSON.stringify(schedule)); }, [schedule]);
   useEffect(() => { localStorage.setItem('amps_attendance', JSON.stringify(attendance)); }, [attendance]);
+  useEffect(() => { localStorage.setItem('amps_settings', JSON.stringify(appSettings)); }, [appSettings]);
 
   const addPlayer = (player: Player) => {
     setPlayers(prev => [...prev, player]);
@@ -76,6 +87,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setSchedule(prev => [...prev, event]);
   };
 
+  const updateAppSettings = (settings: AppSettings) => {
+    setAppSettings(settings);
+  };
+
   const getPlayersByTeam = (teamId: string) => players.filter(p => p.teamId === teamId);
   const getEventsByTeam = (teamId: string) => schedule.filter(e => e.teamId === teamId);
 
@@ -84,15 +99,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     players,
     schedule,
     attendance,
+    appSettings,
     addPlayer,
     updatePlayer,
     deletePlayer,
     updateTeam,
     markAttendance,
     addEvent,
+    updateAppSettings,
     getPlayersByTeam,
     getEventsByTeam
-  }), [teams, players, schedule, attendance]);
+  }), [teams, players, schedule, attendance, appSettings]);
 
   return (
     <DataContext.Provider value={value}>

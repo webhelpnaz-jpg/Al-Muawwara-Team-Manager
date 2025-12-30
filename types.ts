@@ -11,6 +11,11 @@ export enum TeamCategory {
   ACTIVITY = 'Activity'
 }
 
+export interface AppSettings {
+  schoolName: string;
+  logoUrl: string;
+}
+
 export interface User {
   id: string;
   name: string;

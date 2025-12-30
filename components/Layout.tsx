@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -18,7 +19,9 @@ import { UserRole } from '../types';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout, updateUser } = useAuth();
+  const { appSettings } = useData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   
   // Profile Modal State
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -94,8 +97,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       `}>
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div className="flex items-center space-x-2">
-            <Shield className="text-emerald-400" size={28} />
-            <span className="text-xl font-bold tracking-tight">Al Munawwara</span>
+            {appSettings.logoUrl && !logoError ? (
+                <img 
+                  src={appSettings.logoUrl} 
+                  alt="Logo" 
+                  className="w-8 h-8 object-contain"
+                  onError={() => setLogoError(true)}
+                />
+            ) : (
+                <Shield className="text-emerald-400" size={28} />
+            )}
+            <span className="text-xl font-bold tracking-tight truncate">{appSettings.schoolName}</span>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
             <X size={24} />

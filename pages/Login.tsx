@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import { Shield, Lock, Mail, AlertCircle, ArrowLeft, CheckCircle, ExternalLink, ChevronDown, User as UserIcon } from 'lucide-react';
 import { MOCK_USERS } from '../services/mockData';
 import { UserRole } from '../types';
 
 const Login: React.FC = () => {
-  const { login, forgotPassword, usersList } = useAuth(); // Using usersList from context to get latest state
+  const { login, forgotPassword, usersList } = useAuth();
+  const { appSettings } = useData();
   
   // Views: 'login' | 'forgot' | 'sent'
   const [view, setView] = useState<'login' | 'forgot' | 'sent'>('login');
@@ -60,11 +62,11 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4">
       <div className="mb-8 text-center flex flex-col items-center">
-        {/* School Logo with Fallback */}
-        {!logoError ? (
+        {/* Dynamic School Logo with Fallback */}
+        {appSettings.logoUrl && !logoError ? (
           <img 
-            src="/logo.png" 
-            alt="Al Munawwara School Logo" 
+            src={appSettings.logoUrl} 
+            alt="School Logo" 
             className="w-32 h-32 object-contain mb-4 drop-shadow-2xl"
             onError={() => setLogoError(true)}
           />
@@ -72,7 +74,7 @@ const Login: React.FC = () => {
           <Shield className="mx-auto text-emerald-500 mb-4" size={80} />
         )}
         
-        <h1 className="text-3xl font-bold text-white tracking-tight">Al Munawwara Teams</h1>
+        <h1 className="text-3xl font-bold text-white tracking-tight">{appSettings.schoolName}</h1>
         <p className="text-slate-400 mt-2">Sign in to manage sports and activities</p>
       </div>
 

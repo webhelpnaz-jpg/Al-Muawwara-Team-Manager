@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, UserRole } from '../types';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { User } from '../types';
 import { MOCK_USERS } from '../services/mockData';
 
 interface AuthContextType {
@@ -16,11 +16,43 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [usersList, setUsersList] = useState<User[]>(MOCK_USERS);
-  const [user, setUser] = useState<User | null>(null);
+  // Initialize from LocalStorage or fallback to Mock Data
+  const [usersList, setUsersList] = useState<User[]>(() => {
+    try {
+      const savedUsers = localStorage.getItem('amps_users');
+      return savedUsers ? JSON.parse(savedUsers) : MOCK_USERS;
+    } catch (e) {
+      console.error("Failed to load users from storage", e);
+      return MOCK_USERS;
+    }
+  });
+
+  // Initialize session from LocalStorage
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('amps_current_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // Persist Users List
+  useEffect(() => {
+    localStorage.setItem('amps_users', JSON.stringify(usersList));
+  }, [usersList]);
+
+  // Persist Current Session
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('amps_current_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('amps_current_user');
+    }
+  }, [user]);
 
   const login = (email: string, password: string): boolean => {
-    // Check against current state, not static mock
+    // Check against current persisted state
     const foundUser = usersList.find(u => u.email === email && u.password === password);
     if (foundUser) {
       setUser(foundUser);
@@ -35,7 +67,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const forgotPassword = (email: string): boolean => {
     const exists = usersList.some(u => u.email === email);
-    // In a real app, this sends an email. Here we just confirm the user exists.
     return exists;
   };
 
@@ -44,7 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       u.id === userId ? { ...u, password: newPassword } : u
     ));
     
-    // If the logged in user is resetting their own password (rare but possible), update session
+    // If the logged in user is resetting their own password
     if (user?.id === userId) {
       setUser(prev => prev ? { ...prev, password: newPassword } : null);
     }

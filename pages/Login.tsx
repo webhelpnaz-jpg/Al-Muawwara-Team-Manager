@@ -13,6 +13,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [logoError, setLogoError] = useState(false);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,8 +59,19 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4">
-      <div className="mb-8 text-center">
-        <Shield className="mx-auto text-emerald-500 mb-4" size={64} />
+      <div className="mb-8 text-center flex flex-col items-center">
+        {/* School Logo with Fallback */}
+        {!logoError ? (
+          <img 
+            src="/logo.png" 
+            alt="Al Munawwara School Logo" 
+            className="w-32 h-32 object-contain mb-4 drop-shadow-2xl"
+            onError={() => setLogoError(true)}
+          />
+        ) : (
+          <Shield className="mx-auto text-emerald-500 mb-4" size={80} />
+        )}
+        
         <h1 className="text-3xl font-bold text-white tracking-tight">Al Munawwara Teams</h1>
         <p className="text-slate-400 mt-2">Sign in to manage sports and activities</p>
       </div>

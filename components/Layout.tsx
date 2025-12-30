@@ -10,21 +10,62 @@ import {
   Menu, 
   X,
   Shield,
-  Activity
+  Camera,
+  Save,
+  User
 } from 'lucide-react';
 import { UserRole } from '../types';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Profile Modal State
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', password: '', avatarUrl: '' });
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const handleOpenProfile = () => {
+    if (user) {
+      setProfileForm({
+        name: user.name,
+        password: user.password,
+        avatarUrl: user.avatarUrl || ''
+      });
+      setShowProfileModal(true);
+      setSidebarOpen(false); // Close sidebar on mobile
+    }
+  };
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (user) {
+      updateUser({
+        ...user,
+        name: profileForm.name,
+        password: profileForm.password,
+        avatarUrl: profileForm.avatarUrl
+      });
+      setShowProfileModal(false);
+    }
+  };
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileForm(prev => ({ ...prev, avatarUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
   ];
 
-  // Parents don't see the "Teams" list, they only see their dashboard (child info) and schedule
   if (user?.role !== UserRole.PARENT) {
     navItems.push({ name: 'Teams', path: '/teams', icon: <Users size={20} /> });
   }
@@ -82,17 +123,25 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </nav>
 
         <div className="absolute bottom-0 w-full p-4 border-t border-slate-700">
-          <div className="flex items-center mb-4 px-2">
-            <img 
-              src={user?.avatarUrl || "https://picsum.photos/40/40"} 
-              alt="User" 
-              className="w-10 h-10 rounded-full border-2 border-emerald-500"
-            />
+          <button 
+            onClick={handleOpenProfile}
+            className="flex items-center mb-4 px-2 w-full text-left hover:bg-slate-800 rounded-lg p-2 transition-colors group"
+          >
+            <div className="relative">
+              <img 
+                src={user?.avatarUrl || "https://picsum.photos/40/40"} 
+                alt="User" 
+                className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover"
+              />
+              <div className="absolute -bottom-1 -right-1 bg-slate-700 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <Settings size={10} className="text-white" />
+              </div>
+            </div>
             <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-semibold truncate">{user?.name}</p>
+              <p className="text-sm font-semibold truncate group-hover:text-emerald-400 transition-colors">{user?.name}</p>
               <p className="text-xs text-slate-400 truncate">{user?.role}</p>
             </div>
-          </div>
+          </button>
           <button 
             onClick={logout}
             className="flex items-center w-full px-4 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-red-900/30 rounded-lg transition-colors"
@@ -117,6 +166,83 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {children}
         </main>
       </div>
+
+      {/* My Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-800">My Profile</h3>
+                <button onClick={() => setShowProfileModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <form onSubmit={handleProfileSubmit} className="space-y-6">
+                 {/* Avatar Upload */}
+                 <div className="flex flex-col items-center">
+                    <div className="relative group cursor-pointer">
+                      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 shadow-sm">
+                        {profileForm.avatarUrl ? (
+                          <img src={profileForm.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
+                             <User size={40} />
+                          </div>
+                        )}
+                      </div>
+                      <label className="absolute bottom-0 right-0 bg-emerald-600 text-white p-2 rounded-full shadow-lg hover:bg-emerald-700 transition cursor-pointer">
+                        <Camera size={16} />
+                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                      </label>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">Click icon to change photo</p>
+                 </div>
+
+                 <div className="space-y-4">
+                    <div>
+                       <label className="block text-sm font-medium text-slate-700 mb-1">Display Name</label>
+                       <input 
+                         type="text" 
+                         value={profileForm.name}
+                         onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                         required
+                       />
+                    </div>
+                    <div>
+                       <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                       <input 
+                         type="text" 
+                         value={profileForm.password}
+                         onChange={(e) => setProfileForm({...profileForm, password: e.target.value})}
+                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 font-mono"
+                         required
+                       />
+                    </div>
+                    <div>
+                       <label className="block text-sm font-medium text-slate-700 mb-1">Email (Read Only)</label>
+                       <input 
+                         type="email" 
+                         value={user?.email}
+                         disabled
+                         className="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-lg text-slate-500"
+                       />
+                    </div>
+                 </div>
+
+                 <div className="flex justify-end pt-2">
+                    <button 
+                      type="submit" 
+                      className="flex items-center px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium"
+                    >
+                      <Save size={18} className="mr-2" /> Save Profile
+                    </button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

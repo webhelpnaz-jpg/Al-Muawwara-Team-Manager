@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole, User } from '../types';
-import { Shield, Key, Search, User as UserIcon, Edit2, X, Save } from 'lucide-react';
+import { Shield, Key, Search, User as UserIcon, Edit2, X, Save, Camera, Trash2 } from 'lucide-react';
 
 const AdminSettings: React.FC = () => {
   const { user, usersList, adminResetPassword, updateUser } = useAuth();
@@ -60,15 +60,34 @@ const AdminSettings: React.FC = () => {
     }
   };
 
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && editingUser) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditingUser({ ...editingUser, avatarUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    if (editingUser) {
+        setEditingUser({ ...editingUser, avatarUrl: '' });
+    }
+  };
+
   return (
     <div className="space-y-6">
-       <div className="flex items-center space-x-3 mb-6">
-         <div className="p-3 bg-red-100 rounded-full text-red-600">
-           <Shield size={24} />
-         </div>
-         <div>
-            <h1 className="text-2xl font-bold text-slate-900">Admin Console</h1>
-            <p className="text-slate-500">System user management and security controls.</p>
+       <div className="flex items-center justify-between mb-6">
+         <div className="flex items-center space-x-3">
+            <div className="p-3 bg-red-100 rounded-full text-red-600">
+              <Shield size={24} />
+            </div>
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900">Admin Console</h1>
+                <p className="text-slate-500">System user management and security controls.</p>
+            </div>
          </div>
        </div>
 
@@ -105,7 +124,7 @@ const AdminSettings: React.FC = () => {
                   <tr key={u.id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <img src={u.avatarUrl} alt="" className="w-8 h-8 rounded-full mr-3 bg-slate-200" />
+                        <img src={u.avatarUrl || "https://picsum.photos/40/40"} alt="" className="w-8 h-8 rounded-full mr-3 bg-slate-200 object-cover" />
                         <div>
                           <div className="font-medium text-slate-900">{u.name}</div>
                           <div className="text-slate-500 text-xs">{u.email}</div>
@@ -160,6 +179,30 @@ const AdminSettings: React.FC = () => {
                </div>
                
                <form onSubmit={handleEditSubmit} className="space-y-4">
+                  {/* Avatar Upload for Admin */}
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="relative">
+                        <img 
+                            src={editingUser.avatarUrl || "https://picsum.photos/100/100"} 
+                            alt="Avatar" 
+                            className="w-20 h-20 rounded-full object-cover border-2 border-slate-100" 
+                        />
+                        <label className="absolute bottom-0 right-0 bg-emerald-600 text-white p-1.5 rounded-full cursor-pointer hover:bg-emerald-700">
+                            <Camera size={12} />
+                            <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                        </label>
+                    </div>
+                    {editingUser.avatarUrl && (
+                        <button 
+                            type="button" 
+                            onClick={handleRemoveAvatar}
+                            className="text-xs text-red-500 mt-2 hover:underline"
+                        >
+                            Remove Photo
+                        </button>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
                     <input 
@@ -181,7 +224,6 @@ const AdminSettings: React.FC = () => {
                     />
                   </div>
                   
-                  {/* Note: Role editing could be added here, but prompt focused on Names/Details */}
                   <div className="text-xs text-slate-500 pt-2">
                      Role: <span className="font-semibold">{editingUser.role}</span>
                   </div>

@@ -76,6 +76,10 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
       reader.readAsDataURL(file);
     }
   };
+  
+  const handleRemovePhoto = () => {
+      setFormData({...formData, photoUrl: ''});
+  };
 
   return (
     <div className="space-y-4">
@@ -156,7 +160,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
              <form onSubmit={handleSubmit} className="p-6 space-y-4">
                
                {/* Photo Upload */}
-               <div className="flex justify-center mb-6">
+               <div className="flex flex-col items-center justify-center mb-6">
                  <div className="relative group">
                     <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
                        {formData.photoUrl ? (
@@ -170,6 +174,15 @@ const PlayerList: React.FC<PlayerListProps> = ({ teamId }) => {
                       <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
                     </label>
                  </div>
+                 {formData.photoUrl && (
+                     <button 
+                        type="button" 
+                        onClick={handleRemovePhoto}
+                        className="text-xs text-red-500 mt-2 hover:underline"
+                     >
+                        Remove Photo
+                     </button>
+                 )}
                </div>
 
                {/* Personal Info */}

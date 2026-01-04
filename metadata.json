@@ -1,5 +1,7 @@
 {
   "name": "Al Munawwara Team Manager",
   "description": "A comprehensive sports and activity management platform for Al Munawwara School. Handles player rosters, attendance tracking, scheduling, and performance insights for Principals, Coaches, and Admins.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

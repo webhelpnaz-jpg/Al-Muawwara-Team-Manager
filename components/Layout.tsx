@@ -69,11 +69,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
   ];
 
-  if (user?.role !== UserRole.PARENT) {
+  // Logic: Coaches "just see the dashboard", so we hide Teams and Schedule for them.
+  // Management (Admin, Principal, MIC) sees everything.
+  // Parents see Dashboard and Global Schedule.
+  
+  if (user?.role === UserRole.ADMIN || user?.role === UserRole.PRINCIPAL || user?.role === UserRole.MASTER_IN_CHARGE) {
     navItems.push({ name: 'Teams', path: '/teams', icon: <Users size={20} /> });
+    navItems.push({ name: 'Schedule', path: '/schedule', icon: <Calendar size={20} /> });
+  } else if (user?.role === UserRole.PARENT) {
+    navItems.push({ name: 'Schedule', path: '/schedule', icon: <Calendar size={20} /> });
   }
-
-  navItems.push({ name: 'Schedule', path: '/schedule', icon: <Calendar size={20} /> });
 
   if (user?.role === UserRole.ADMIN) {
     navItems.push({ name: 'Admin', path: '/admin', icon: <Settings size={20} /> });

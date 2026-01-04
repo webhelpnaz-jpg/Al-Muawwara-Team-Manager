@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-import { Shield, Lock, Mail, AlertCircle, ArrowLeft, CheckCircle, ExternalLink, ChevronDown, User as UserIcon } from 'lucide-react';
-import { MOCK_USERS } from '../services/mockData';
+import { Shield, Lock, Mail, AlertCircle, ArrowLeft, CheckCircle, ExternalLink, ChevronDown, User as UserIcon, Users } from 'lucide-react';
 import { UserRole } from '../types';
 
 const Login: React.FC = () => {
@@ -54,7 +53,8 @@ const Login: React.FC = () => {
   const managementUsers = usersList.filter(u => 
     u.role === UserRole.ADMIN || 
     u.role === UserRole.PRINCIPAL || 
-    u.role === UserRole.MASTER_IN_CHARGE
+    u.role === UserRole.MASTER_IN_CHARGE ||
+    u.role === UserRole.PARENT
   );
 
   const coachUsers = usersList.filter(u => u.role === UserRole.COACH);
@@ -219,40 +219,34 @@ const Login: React.FC = () => {
             </div>
         )}
         
-        {/* Credentials Cheat Sheet (Updated) */}
-        <div className="bg-slate-50 p-6 border-t border-slate-100">
+        {/* Credentials Cheat Sheet */}
+        <div className="bg-slate-50 p-6 border-t border-slate-100 max-h-64 overflow-y-auto">
            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Quick Fill (Development Mode)</h3>
            
-           <div className="grid grid-cols-1 gap-4">
-              {/* Management Logins */}
+           <div className="space-y-4">
+              {/* Administration */}
               <div>
-                <h4 className="text-xs font-semibold text-slate-400 mb-2">Administration</h4>
-                <div className="space-y-2">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1">Administration & Others</h4>
+                <div className="grid grid-cols-2 gap-2">
                   {managementUsers.map(u => (
                     <button
                       key={u.id}
                       onClick={() => fillCredentials(u.email, u.password)}
-                      className="w-full flex items-center justify-between p-2 rounded bg-white border border-slate-200 hover:border-emerald-500 hover:shadow-sm text-left transition-all"
+                      className="text-left p-1.5 bg-white border border-slate-200 rounded text-[10px] hover:border-emerald-500 hover:shadow-sm"
                     >
-                      <div className="flex items-center">
-                          <div className={`w-2 h-2 rounded-full mr-2 ${u.role === 'Admin' ? 'bg-red-500' : 'bg-purple-500'}`}></div>
-                          <span className="text-sm font-medium text-slate-700">{u.role}</span>
-                      </div>
-                      <span className="text-xs text-slate-400">{u.email}</span>
+                      <div className="font-bold text-slate-700 truncate">{u.role}</div>
+                      <div className="text-slate-400 truncate">{u.email}</div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Coach Dropdown */}
+              {/* Coaches */}
               <div>
-                <h4 className="text-xs font-semibold text-slate-400 mb-2">Team Coaches</h4>
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1">Team Coaches</h4>
                 <div className="relative">
-                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                     <UserIcon size={16} className="text-slate-400" />
-                   </div>
                    <select 
-                     className="block w-full pl-10 pr-10 py-2 text-sm bg-white border border-slate-200 rounded-md focus:ring-emerald-500 focus:border-emerald-500 appearance-none cursor-pointer"
+                     className="block w-full pl-3 pr-10 py-1.5 text-[10px] bg-white border border-slate-200 rounded-md focus:ring-emerald-500 appearance-none cursor-pointer"
                      onChange={(e) => {
                        const selectedUser = coachUsers.find(u => u.id === e.target.value);
                        if (selectedUser) {
@@ -261,16 +255,13 @@ const Login: React.FC = () => {
                      }}
                      defaultValue=""
                    >
-                     <option value="" disabled>Select a Sport...</option>
+                     <option value="" disabled>Select a Coach...</option>
                      {coachUsers.map(u => (
                        <option key={u.id} value={u.id}>
-                          {u.email.split('@')[0].toUpperCase()} Coach
+                          {u.name}
                        </option>
                      ))}
                    </select>
-                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                     <ChevronDown size={16} className="text-slate-400" />
-                   </div>
                 </div>
               </div>
            </div>

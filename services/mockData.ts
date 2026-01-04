@@ -99,28 +99,24 @@ const generateMockPlayers = (): Player[] => {
 
 export const MOCK_PLAYERS = generateMockPlayers();
 
-// Assign a parent to the first player of the first team
-const samplePlayerId = MOCK_PLAYERS[0].id; 
-
 const generateCoachUsers = (): User[] => {
   return MOCK_TEAMS.map((team, index) => {
-    // Determine the main coach name
     const headCoachName = team.coaches.find(c => c.role === 'Head Coach')?.name || 'Coach';
-    // Remove "Mr.", "Ms.", "Master" for cleaner email generation if needed, or just use sport name
-    // Requirement: "Password as the sport name"
     const sportName = team.name;
     
     return {
       id: `u-coach-${team.id}`,
       name: `${headCoachName} (${sportName})`,
       email: `${sportName.toLowerCase().replace(/\s/g, '')}@school.com`,
-      password: sportName, // Requirement: Password is the Sport Name
+      password: sportName,
       role: UserRole.COACH,
       assignedTeamId: team.id,
       avatarUrl: `https://picsum.photos/100/100?random=${20 + index}`
     };
   });
 };
+
+const samplePlayerId = MOCK_PLAYERS[0].id; // Linking to Rugby Student 1
 
 export const MOCK_USERS: User[] = [
   { 
@@ -148,13 +144,13 @@ export const MOCK_USERS: User[] = [
     avatarUrl: 'https://picsum.photos/100/100?random=5' 
   },
   { 
-    id: 'u5', 
-    name: 'Mr. & Mrs. Perera (Parents)', 
+    id: 'u7', 
+    name: 'Parent User', 
     email: 'parent@school.com', 
     password: '123', 
     role: UserRole.PARENT, 
-    linkedPlayerId: samplePlayerId, 
-    avatarUrl: 'https://picsum.photos/100/100?random=6' 
+    linkedPlayerId: samplePlayerId,
+    avatarUrl: 'https://picsum.photos/100/100?random=10' 
   },
   ...generateCoachUsers()
 ];
